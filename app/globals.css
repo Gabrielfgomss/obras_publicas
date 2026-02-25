@@ -45,6 +45,22 @@ body {
     --status-planned: 35 85% 50%;
     --status-delayed: 0 65% 48%;
     --status-on-hold: 215 10% 46%;
+
+    --sidebar-background: 215 28% 17%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 211 60% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 23%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 215 20% 25%;
+    --sidebar-ring: 211 60% 50%;
+
+    --success: 150 50% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 85% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 211 60% 50%;
+    --info-foreground: 0 0% 100%;
   }
 }
 

@@ -77,7 +77,7 @@ export function PortalHeader() {
         {/* Right side: discrete admin link */}
         <div className="hidden md:flex items-center">
           <Link
-            href="#"
+            href="/admin"
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             Contratar / Area administrativa
@@ -117,7 +117,7 @@ export function PortalHeader() {
             ))}
             <div className="pt-3 mt-2 border-t border-border">
               <Link
-                href="#"
+                href="/admin"
                 className="block px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Contratar / Area administrativa

@@ -574,11 +574,11 @@ export const statusLabels: Record<ProjectStatus, string> = {
 }
 
 export const statusColors: Record<ProjectStatus, string> = {
-  "in-progress": "bg-status-in-progress text-primary-foreground",
-  completed: "bg-status-completed text-primary-foreground",
-  planned: "bg-status-planned text-primary-foreground",
-  delayed: "bg-status-delayed text-primary-foreground",
-  "on-hold": "bg-status-on-hold text-primary-foreground",
+  "in-progress": "bg-status-in-progress text-white",
+  completed: "bg-status-completed text-white",
+  planned: "bg-status-planned text-white",
+  delayed: "bg-status-delayed text-white",
+  "on-hold": "bg-status-on-hold text-white",
 }
 
 export const statusDotColors: Record<ProjectStatus, string> = {

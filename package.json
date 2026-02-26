@@ -47,7 +47,7 @@
     "next": "16.1.6",
     "next-themes": "^0.4.6",
     "react": "19.2.3",
-    "react-day-picker": "8.10.1",
+    "react-day-picker": "^9.0.0",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
@@ -67,11 +67,8 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.7.3"
   },
-  "packageManager": "pnpm@10.11.0",
-  "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.7",
-      "@types/react-dom": "19.2.3"
-    }
+  "overrides": {
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3"
   }
 }

@@ -113,11 +113,8 @@ export default function ProjectDetailPage({
             </div>
           </div>
 
-          {/* Hero image */}
-          <HeroImage project={project} />
-
-          {/* Gallery */}
-          <GallerySection project={project} />
+          {/* Milestone calendar - highlighted below header */}
+          <MilestoneCalendar project={project} />
 
           {/* Location map */}
           <LocationMap project={project} />
@@ -258,8 +255,8 @@ export default function ProjectDetailPage({
                 </div>
               </div>
 
-              {/* Milestone calendar */}
-              <MilestoneCalendar project={project} />
+              {/* Gallery section */}
+              <GallerySection project={project} />
             </div>
           </div>
         </div>
@@ -291,47 +288,27 @@ function InfoRow({
   );
 }
 
-function HeroImage({ project }: { project: Project }) {
-  return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
-      <div className="aspect-[21/9] flex items-center justify-center bg-secondary">
-        {project.heroImage ? (
-          <img
-            src={project.heroImage || "/placeholder.svg"}
-            alt={`Imagem conceitual da obra: ${project.name}`}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <ImageOff className="h-10 w-10 text-muted-foreground/40" />
-            <span className="text-sm font-medium">
-              Imagem conceitual da obra
-            </span>
-            <span className="text-xs text-muted-foreground/50">
-              Nenhuma imagem disponivel no momento
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function GallerySection({ project }: { project: Project }) {
-  if (project.galleryImages.length === 0) {
+  const allImages = [
+    ...(project.heroImage ? [project.heroImage] : []),
+    ...project.galleryImages,
+  ];
+
+  if (allImages.length === 0) {
     return (
-      <div className="mt-6">
-        <h2 className="text-sm font-bold text-foreground mb-3">
-          Galeria da construcao
-        </h2>
-        <div className="bg-card border border-border rounded-lg p-6 text-center">
+      <div className="bg-card border border-border rounded-lg">
+        <div className="px-4 py-3.5 border-b border-border">
+          <h2 className="text-sm font-bold text-foreground">
+            Galeria da construcao
+          </h2>
+        </div>
+        <div className="p-6 text-center">
           <ImageOff className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
           <p className="text-sm text-muted-foreground font-medium">
-            Nenhuma imagem da construcao disponivel.
+            Nenhuma imagem disponivel.
           </p>
           <p className="text-xs text-muted-foreground/60 mt-1">
-            Imagens serao exibidas aqui conforme forem publicadas pelo
-            responsavel da obra.
+            Imagens serao publicadas pelo responsavel da obra.
           </p>
         </div>
       </div>
@@ -339,24 +316,42 @@ function GallerySection({ project }: { project: Project }) {
   }
 
   return (
-    <div className="mt-6">
-      <h2 className="text-sm font-bold text-foreground mb-3">
-        Galeria da construcao
-      </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-        {project.galleryImages.map((img, i) => (
-          <div
-            key={`gallery-${i}`}
-            className="aspect-square bg-secondary border border-border rounded-lg overflow-hidden"
-          >
-            <img
-              src={img || "/placeholder.svg"}
-              alt={`Foto ${i + 1} da construcao: ${project.name}`}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ))}
+    <div className="bg-card border border-border rounded-lg overflow-hidden">
+      <div className="px-4 py-3.5 border-b border-border">
+        <h2 className="text-sm font-bold text-foreground">
+          Galeria da construcao
+        </h2>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {allImages.length} foto{allImages.length !== 1 ? "s" : ""}
+        </p>
       </div>
+      {/* Hero image (first) in full width */}
+      {project.heroImage && (
+        <div className="aspect-video bg-secondary border-b border-border overflow-hidden">
+          <img
+            src={project.heroImage}
+            alt={`Imagem conceitual da obra: ${project.name}`}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      {/* Remaining gallery images */}
+      {project.galleryImages.length > 0 && (
+        <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {project.galleryImages.map((img, i) => (
+            <div
+              key={`gallery-${i}`}
+              className="aspect-square bg-secondary border border-border rounded-md overflow-hidden"
+            >
+              <img
+                src={img || "/placeholder.svg"}
+                alt={`Foto ${i + 1} da construcao: ${project.name}`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -532,17 +527,41 @@ function MilestoneCalendar({ project }: { project: Project }) {
     for (const upd of project.updates) {
       const key = upd.date;
       if (!map.has(key)) map.set(key, []);
-      map
-        .get(key)!
-        .push({
-          type: "update",
-          label: upd.title,
-          completed: false,
-          imageUrl: upd.imageUrl,
-        });
+      map.get(key)!.push({
+        type: "update",
+        label: upd.title,
+        completed: false,
+        imageUrl: upd.imageUrl,
+      });
     }
     return map;
   }, [project.milestones, project.updates]);
+
+  // Map date -> first imageUrl from updates on that date
+  const imagesByDate = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const upd of project.updates) {
+      if (upd.imageUrl && !map.has(upd.date)) {
+        map.set(upd.date, upd.imageUrl);
+      }
+    }
+    return map;
+  }, [project.updates]);
+
+  // Assign galleryImages to milestones that have no update image
+  const milestoneImages = useMemo(() => {
+    const result = new Map<string, string>();
+    let galleryIdx = 0;
+    for (const ms of project.milestones) {
+      const img = imagesByDate.get(ms.date);
+      if (img) {
+        result.set(ms.id, img);
+      } else if (project.galleryImages[galleryIdx]) {
+        result.set(ms.id, project.galleryImages[galleryIdx++]);
+      }
+    }
+    return result;
+  }, [project.milestones, imagesByDate, project.galleryImages]);
 
   const initialDate = useMemo(() => {
     const allDates = [
@@ -614,8 +633,8 @@ function MilestoneCalendar({ project }: { project: Project }) {
 
   if (project.milestones.length === 0) {
     return (
-      <div className="bg-card border border-border rounded-lg">
-        <div className="px-4 py-3.5 border-b border-border">
+      <div className="bg-card border border-border rounded-lg mt-6">
+        <div className="px-5 py-4 border-b border-border">
           <h2 className="text-sm font-bold text-foreground">
             Calendario de marcos
           </h2>
@@ -630,8 +649,8 @@ function MilestoneCalendar({ project }: { project: Project }) {
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
-      <div className="px-4 py-3.5 border-b border-border">
+    <div className="bg-card border border-border rounded-lg overflow-hidden mt-6">
+      <div className="px-5 py-4 border-b border-border">
         <h2 className="text-sm font-bold text-foreground">
           Calendario de marcos
         </h2>
@@ -640,177 +659,250 @@ function MilestoneCalendar({ project }: { project: Project }) {
         </p>
       </div>
 
-      {/* Calendar body - institutional dark theme */}
-      <div className="bg-primary text-primary-foreground">
-        {/* Month navigation */}
-        <div className="flex items-center justify-between px-4 py-3">
-          <button
-            type="button"
-            onClick={prevMonth}
-            className="p-1.5 rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-            aria-label="Mes anterior"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="text-sm font-semibold">
-            {MONTH_NAMES[currentMonth]} {currentYear}
-          </span>
-          <button
-            type="button"
-            onClick={nextMonth}
-            className="p-1.5 rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-            aria-label="Proximo mes"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Day headers */}
-        <div className="grid grid-cols-7 gap-0 px-2">
-          {DAY_HEADERS.map((d) => (
-            <div
-              key={d}
-              className="text-center text-[10px] text-white/40 font-semibold pb-2"
+      <div className="flex flex-col lg:flex-row">
+        {/* Left: Calendar - institutional dark theme */}
+        <div className="bg-primary text-primary-foreground lg:w-80 shrink-0">
+          {/* Month navigation */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <button
+              type="button"
+              onClick={prevMonth}
+              className="p-1.5 rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              aria-label="Mes anterior"
             >
-              {d}
-            </div>
-          ))}
-        </div>
-
-        {/* Day cells */}
-        <div className="grid grid-cols-7 gap-0 px-2 pb-3">
-          {calendarDays.map((day, i) => {
-            if (day === null) {
-              return <div key={`empty-${i}`} className="aspect-square" />;
-            }
-            const dateKey = formatDateKey(day);
-            const entries = notableDates.get(dateKey);
-            const hasEvents = !!entries;
-            const isSelected = selectedDate === dateKey;
-            const today = new Date();
-            const isToday =
-              day === today.getDate() &&
-              currentMonth === today.getMonth() &&
-              currentYear === today.getFullYear();
-
-            return (
-              <button
-                key={dateKey}
-                type="button"
-                onClick={() =>
-                  hasEvents
-                    ? setSelectedDate(isSelected ? null : dateKey)
-                    : undefined
-                }
-                className={cn(
-                  "aspect-square flex flex-col items-center justify-center rounded-md text-xs relative transition-colors",
-                  hasEvents
-                    ? "cursor-pointer hover:bg-white/10"
-                    : "cursor-default",
-                  isSelected && "bg-white/15 ring-1 ring-white/30",
-                  isToday && !isSelected && "ring-1 ring-white/20",
-                )}
-                aria-label={
-                  hasEvents
-                    ? `${day} de ${MONTH_NAMES[currentMonth]} - ${entries.length} evento(s)`
-                    : `${day} de ${MONTH_NAMES[currentMonth]}`
-                }
-              >
-                {hasEvents ? (
-                  <div className="relative">
-                    <div
-                      className={cn(
-                        "h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-semibold border-2",
-                        entries.some(
-                          (e) => e.type === "milestone" && e.completed,
-                        )
-                          ? "border-status-completed bg-status-completed/20 text-white"
-                          : entries.some((e) => e.type === "milestone")
-                            ? "border-accent bg-accent/20 text-white"
-                            : "border-status-planned bg-status-planned/20 text-white",
-                      )}
-                    >
-                      {day}
-                    </div>
-                    <div
-                      className={cn(
-                        "absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-primary",
-                        getDotColor(entries),
-                      )}
-                    />
-                  </div>
-                ) : (
-                  <span
-                    className={cn(
-                      "tabular-nums",
-                      isToday ? "text-white font-semibold" : "text-white/40",
-                    )}
-                  >
-                    {day}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Selected date details panel */}
-      {selectedEntries && selectedDate && (
-        <div className="border-t border-border bg-card">
-          <div className="px-4 py-2.5 border-b border-border">
-            <span className="text-xs font-semibold text-muted-foreground tabular-nums">
-              {selectedDate}
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-sm font-semibold">
+              {MONTH_NAMES[currentMonth]} {currentYear}
             </span>
+            <button
+              type="button"
+              onClick={nextMonth}
+              className="p-1.5 rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              aria-label="Proximo mes"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
-          <div className="divide-y divide-border">
-            {selectedEntries.map((entry, i) => (
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 gap-0 px-2">
+            {DAY_HEADERS.map((d) => (
               <div
-                key={`detail-${i}`}
-                className="px-4 py-3 flex items-start gap-2.5"
+                key={d}
+                className="text-center text-[10px] text-white/40 font-semibold pb-2"
               >
-                {entry.type === "milestone" ? (
-                  entry.completed ? (
-                    <CheckCircle2 className="h-4 w-4 text-status-completed shrink-0 mt-0.5" />
-                  ) : (
-                    <Circle className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-                  )
-                ) : (
-                  <Calendar className="h-4 w-4 text-status-planned shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-foreground leading-snug">
-                    {entry.label}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">
-                    {entry.type === "milestone"
-                      ? entry.completed
-                        ? "Marco concluido"
-                        : "Marco previsto"
-                      : "Atualizacao de campo"}
-                  </div>
-                </div>
+                {d}
               </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* Legend */}
-      <div className="px-4 py-2.5 border-t border-border bg-card">
-        <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground font-medium">
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-status-completed" />
-            Concluido
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-accent" />
-            Previsto
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-status-planned" />
-            Atualizacao
-          </span>
+          {/* Day cells */}
+          <div className="grid grid-cols-7 gap-0 px-2 pb-3">
+            {calendarDays.map((day, i) => {
+              if (day === null) {
+                return <div key={`empty-${i}`} className="aspect-square" />;
+              }
+              const dateKey = formatDateKey(day);
+              const entries = notableDates.get(dateKey);
+              const hasEvents = !!entries;
+              const isSelected = selectedDate === dateKey;
+              const today = new Date();
+              const isToday =
+                day === today.getDate() &&
+                currentMonth === today.getMonth() &&
+                currentYear === today.getFullYear();
+
+              return (
+                <button
+                  key={dateKey}
+                  type="button"
+                  onClick={() =>
+                    hasEvents
+                      ? setSelectedDate(isSelected ? null : dateKey)
+                      : undefined
+                  }
+                  className={cn(
+                    "aspect-square flex flex-col items-center justify-center rounded-md text-xs relative transition-colors",
+                    hasEvents
+                      ? "cursor-pointer hover:bg-white/10"
+                      : "cursor-default",
+                    isSelected && "bg-white/15 ring-1 ring-white/30",
+                    isToday && !isSelected && "ring-1 ring-white/20",
+                  )}
+                  aria-label={
+                    hasEvents
+                      ? `${day} de ${MONTH_NAMES[currentMonth]} - ${entries.length} evento(s)`
+                      : `${day} de ${MONTH_NAMES[currentMonth]}`
+                  }
+                >
+                  {hasEvents ? (
+                    <div className="relative">
+                      <div
+                        className={cn(
+                          "h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-semibold border-2",
+                          entries.some(
+                            (e) => e.type === "milestone" && e.completed,
+                          )
+                            ? "border-status-completed bg-status-completed/20 text-white"
+                            : entries.some((e) => e.type === "milestone")
+                              ? "border-accent bg-accent/20 text-white"
+                              : "border-status-planned bg-status-planned/20 text-white",
+                        )}
+                      >
+                        {day}
+                      </div>
+                      <div
+                        className={cn(
+                          "absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-primary",
+                          getDotColor(entries),
+                        )}
+                      />
+                    </div>
+                  ) : (
+                    <span
+                      className={cn(
+                        "tabular-nums",
+                        isToday ? "text-white font-semibold" : "text-white/40",
+                      )}
+                    >
+                      {day}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="px-4 py-2.5 border-t border-white/10">
+            <div className="flex flex-wrap items-center gap-3 text-[10px] text-white/50 font-medium">
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-status-completed" />
+                Concluido
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-accent" />
+                Previsto
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-status-planned" />
+                Atualizacao
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Milestones list or selected date details */}
+        <div className="flex-1 min-w-0 border-t border-border lg:border-t-0 lg:border-l lg:border-border">
+          {selectedEntries && selectedDate ? (
+            /* Selected date details with thumbnails */
+            <div>
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground tabular-nums">
+                  {selectedDate}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="text-[10px] text-accent hover:text-accent/80 font-semibold transition-colors"
+                >
+                  Ver todos
+                </button>
+              </div>
+              <div className="divide-y divide-border">
+                {selectedEntries.map((entry, i) => (
+                  <div
+                    key={`detail-${i}`}
+                    className="px-4 py-3 flex items-start gap-3"
+                  >
+                    <div className="shrink-0 mt-0.5">
+                      {entry.type === "milestone" ? (
+                        entry.completed ? (
+                          <CheckCircle2 className="h-4 w-4 text-status-completed" />
+                        ) : (
+                          <Circle className="h-4 w-4 text-accent" />
+                        )
+                      ) : (
+                        <Calendar className="h-4 w-4 text-status-planned" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-foreground leading-snug">
+                        {entry.label}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        {entry.type === "milestone"
+                          ? entry.completed
+                            ? "Marco concluido"
+                            : "Marco previsto"
+                          : "Atualizacao de campo"}
+                      </div>
+                    </div>
+                    {entry.imageUrl && (
+                      <div className="h-16 w-16 rounded-md overflow-hidden bg-muted shrink-0 border border-border">
+                        <img
+                          src={entry.imageUrl}
+                          alt={entry.label}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* All milestones list with thumbnails */
+            <div>
+              <div className="px-4 py-3 border-b border-border">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Todos os marcos ({project.milestones.length})
+                </h3>
+              </div>
+              <div className="divide-y divide-border overflow-y-auto max-h-72 lg:max-h-none">
+                {project.milestones.map((ms) => {
+                  const imgUrl = milestoneImages.get(ms.id);
+                  return (
+                    <button
+                      key={ms.id}
+                      type="button"
+                      onClick={() => setSelectedDate(ms.date)}
+                      className="w-full px-4 py-3 flex items-start gap-3 hover:bg-muted/40 transition-colors text-left"
+                    >
+                      <div className="shrink-0 mt-0.5">
+                        {ms.completed ? (
+                          <CheckCircle2 className="h-4 w-4 text-status-completed" />
+                        ) : (
+                          <Circle className="h-4 w-4 text-accent" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-foreground leading-snug">
+                          {ms.label}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
+                          {ms.date}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {ms.completed ? "Concluido" : "Previsto"}
+                        </div>
+                      </div>
+                      {imgUrl && (
+                        <div className="h-14 w-14 rounded-md overflow-hidden bg-muted shrink-0 border border-border">
+                          <img
+                            src={imgUrl}
+                            alt={ms.label}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

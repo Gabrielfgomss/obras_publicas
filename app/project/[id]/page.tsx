@@ -29,8 +29,12 @@ import {
   Clock,
   Wallet,
   Banknote,
-  Activity,
 } from "lucide-react";
+
+function formatDateBR(iso: string) {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 // TODO: conectar ao campo real quando dispon\u00edvel na API/store
 function getMockFinancials(project: Project) {
@@ -92,47 +96,59 @@ export default function ProjectDetailPage({
           </nav>
 
           {/* Project header card */}
-          <div className="bg-card border border-border rounded-lg p-6 mb-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="badge-institutional">
-                    <Shield className="h-3 w-3" />
-                    Obra Publica
-                  </span>
-                  <span className="text-xs text-muted-foreground font-medium">
-                    {project.contractId}
-                  </span>
-                </div>
-                <h1 className="text-xl md:text-2xl font-bold text-foreground leading-snug mb-2 text-balance">
-                  {project.name}
-                </h1>
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4 shrink-0 text-accent/60" />
-                  <span>
-                    {project.location} -- {project.city}, {project.district}
-                  </span>
-                </div>
+          <div className="bg-card border border-border rounded-lg mb-6 shadow-sm overflow-hidden flex">
+            {/* Left: all content */}
+            <div className="flex-1 min-w-0 p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="badge-institutional">
+                  <Shield className="h-3 w-3" />
+                  Obra Publica
+                </span>
+                <span className="text-xs text-muted-foreground font-medium">
+                  {project.contractId}
+                </span>
+              </div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground leading-snug mb-2 text-balance">
+                {project.name}
+              </h1>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+                <MapPin className="h-4 w-4 shrink-0 text-accent/60" />
+                <span>
+                  {project.location} -- {project.city}, {project.district}
+                </span>
               </div>
               <StatusBadge
                 status={project.status}
                 className="text-sm px-3.5 py-1.5"
               />
-            </div>
 
-            <div className="flex items-center gap-4 px-4 py-3 bg-muted/50 rounded-lg">
-              <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-                Progresso
-              </span>
-              <div className="progress-institutional flex-1">
-                <div style={{ width: `${project.progress}%` }} />
+              <div className="flex items-center gap-4 px-4 py-3 bg-muted/50 rounded-lg mt-4">
+                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                  Progresso
+                </span>
+                <div className="progress-institutional flex-1">
+                  <div style={{ width: `${project.progress}%` }} />
+                </div>
+                <span className="text-base font-bold text-foreground tabular-nums w-14 text-right">
+                  {project.progress}%
+                </span>
               </div>
-              <span className="text-base font-bold text-foreground tabular-nums w-14 text-right">
-                {project.progress}%
-              </span>
+
+              <HeaderStatsGrid project={project} />
             </div>
 
-            <HeaderStatsGrid project={project} />
+            {/* Right: cover photo inset with card margin */}
+            {project.heroImage && (
+              <div className="hidden md:block w-[28rem] shrink-0 relative">
+                <div className="absolute inset-3 rounded-xl overflow-hidden">
+                  <img
+                    src={project.heroImage}
+                    alt={`Foto da obra: ${project.name}`}
+                    className="w-full h-full object-fill"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Milestone calendar - highlighted below header */}
@@ -296,13 +312,12 @@ function HeaderStatsGrid({ project }: { project: Project }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
       <HeaderStat
-        icon={Activity}
-        label="Status da obra"
+        icon={Clock}
+        label="Previsao de conclusao"
         value={
-          <StatusBadge
-            status={project.status}
-            className="text-sm px-3 py-1.5"
-          />
+          <span className="text-base font-bold text-foreground tabular-nums">
+            {formatDateBR(project.expectedEndDate)}
+          </span>
         }
       />
       <HeaderStat

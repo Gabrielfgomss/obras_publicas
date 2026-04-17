@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 import type { Project, ProjectStatus } from "@/lib/mock-data";
 import { statusLabels } from "@/lib/mock-data";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, MapPin, Maximize2, Minimize2 } from "lucide-react";
 
 const STATUS_MARKER_COLORS: Record<ProjectStatus, string> = {
   "in-progress": "#0891B2",
@@ -27,6 +28,8 @@ interface ProjectMapProps {
   isLoading?: boolean;
   error?: string | null;
   className?: string;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 export function ProjectMap({
@@ -39,6 +42,8 @@ export function ProjectMap({
   isLoading,
   error,
   className,
+  isExpanded,
+  onToggleExpand,
 }: ProjectMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -381,9 +386,28 @@ export function ProjectMap({
         </div>
       )}
 
-      {/* Project count overlay */}
-      <div className="absolute top-3 right-3 bg-card/95 backdrop-blur-sm border border-border rounded-lg px-3 py-2 text-xs text-foreground font-semibold shadow-sm">
-        {projects.length} {projects.length === 1 ? "obra" : "obras"} no mapa
+      {/* Top-right controls: project count + expand toggle */}
+      <div className="absolute top-3 right-3 flex items-center gap-2">
+        <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-3 py-2 text-xs text-foreground font-semibold shadow-sm">
+          {projects.length} {projects.length === 1 ? "obra" : "obras"} no mapa
+        </div>
+        {onToggleExpand && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            onClick={onToggleExpand}
+            aria-label={isExpanded ? "Recolher mapa" : "Expandir mapa"}
+            title={isExpanded ? "Recolher mapa" : "Expandir mapa"}
+            className="h-9 w-9 bg-card/95 backdrop-blur-sm border border-border shadow-sm hover:bg-card"
+          >
+            {isExpanded ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

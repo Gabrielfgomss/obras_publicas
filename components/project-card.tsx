@@ -5,7 +5,24 @@ import { cn } from "@/lib/utils";
 import type { Project } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/status-badge";
 import { Progress } from "@/components/ui/progress";
-import { MapPin, Calendar, ArrowUpRight } from "lucide-react";
+import { MapPin, Calendar, ArrowUpRight, Wallet, Banknote } from "lucide-react";
+
+// TODO: conectar ao campo real quando dispon\u00edvel na API/store
+function getMockFinancials(project: Project) {
+  const seed = project.id
+    .split("")
+    .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  const totalValue = 1_800_000 + (seed % 15) * 650_000;
+  const executedValue = Math.round((totalValue * project.progress) / 100);
+  return { totalValue, executedValue };
+}
+
+const brl = (n: number) =>
+  new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 const statusAccentMap: Record<string, string> = {
   "in-progress": "card-accent-in-progress",
@@ -28,6 +45,8 @@ export function ProjectCard({
   onMouseEnter,
   onMouseLeave,
 }: ProjectCardProps) {
+  const { totalValue, executedValue } = getMockFinancials(project);
+
   return (
     <Link
       href={`/project/${project.id}`}
@@ -46,9 +65,40 @@ export function ProjectCard({
         <StatusBadge status={project.status} className="shrink-0" />
       </div>
 
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-        <MapPin className="h-3.5 w-3.5 shrink-0 text-accent/60" />
-        <span className="truncate">{project.location}</span>
+      <div className="grid grid-cols-3 gap-3 mb-3 text-xs">
+        <div className="flex items-start gap-1.5 min-w-0">
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-accent/60 mt-0.5" />
+          <div className="min-w-0">
+            <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider leading-tight">
+              Endereco
+            </div>
+            <div className="text-foreground font-medium truncate">
+              {project.location}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-start gap-1.5 min-w-0">
+          <Wallet className="h-3.5 w-3.5 shrink-0 text-accent/60 mt-0.5" />
+          <div className="min-w-0">
+            <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider leading-tight">
+              Executado
+            </div>
+            <div className="text-foreground font-semibold tabular-nums truncate">
+              {brl(executedValue)}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-start gap-1.5 min-w-0">
+          <Banknote className="h-3.5 w-3.5 shrink-0 text-accent/60 mt-0.5" />
+          <div className="min-w-0">
+            <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider leading-tight">
+              Total
+            </div>
+            <div className="text-foreground font-semibold tabular-nums truncate">
+              {brl(totalValue)}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 mb-3">

@@ -27,7 +27,27 @@ import {
   Tag,
   DollarSign,
   Clock,
+  Wallet,
+  Banknote,
+  Activity,
 } from "lucide-react";
+
+// TODO: conectar ao campo real quando dispon\u00edvel na API/store
+function getMockFinancials(project: Project) {
+  const seed = project.id
+    .split("")
+    .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  const totalValue = 1_800_000 + (seed % 15) * 650_000;
+  const executedValue = Math.round((totalValue * project.progress) / 100);
+  return { totalValue, executedValue };
+}
+
+const brl = (n: number) =>
+  new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 export default function ProjectDetailPage({
   params,
@@ -111,6 +131,8 @@ export default function ProjectDetailPage({
                 {project.progress}%
               </span>
             </div>
+
+            <HeaderStatsGrid project={project} />
           </div>
 
           {/* Milestone calendar - highlighted below header */}
@@ -267,6 +289,63 @@ export default function ProjectDetailPage({
 }
 
 /* ---- Sub-components ---- */
+
+function HeaderStatsGrid({ project }: { project: Project }) {
+  const { totalValue, executedValue } = getMockFinancials(project);
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+      <HeaderStat
+        icon={Activity}
+        label="Status da obra"
+        value={
+          <StatusBadge
+            status={project.status}
+            className="text-sm px-3 py-1.5"
+          />
+        }
+      />
+      <HeaderStat
+        icon={Wallet}
+        label="Valor executado"
+        value={
+          <span className="text-base font-bold text-foreground tabular-nums">
+            {brl(executedValue)}
+          </span>
+        }
+      />
+      <HeaderStat
+        icon={Banknote}
+        label="Valor total da obra"
+        value={
+          <span className="text-base font-bold text-foreground tabular-nums">
+            {brl(totalValue)}
+          </span>
+        }
+      />
+    </div>
+  );
+}
+
+function HeaderStat({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="px-4 py-3 bg-muted/40 rounded-lg border border-border/60 flex flex-col gap-1.5">
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <Icon className="h-3 w-3 shrink-0 text-accent/60" />
+        <span className="font-semibold uppercase tracking-wider">{label}</span>
+      </div>
+      <div className="leading-tight">{value}</div>
+    </div>
+  );
+}
 
 function InfoRow({
   icon: Icon,

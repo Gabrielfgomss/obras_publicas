@@ -24,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, SlidersHorizontal, X, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -135,10 +134,6 @@ export default function ExplorePage() {
                 <p className="text-xs text-muted-foreground">
                   Busque e filtre obras por nome, localizacao ou status.
                 </p>
-              </div>
-              <div className="text-xs text-muted-foreground tabular-nums font-semibold bg-muted px-3 py-1.5 rounded-lg">
-                {filteredProjects.length}{" "}
-                {filteredProjects.length === 1 ? "resultado" : "resultados"}
               </div>
             </div>
 
@@ -263,43 +258,42 @@ export default function ExplorePage() {
           </div>
         </div>
 
-        {/* Main content: Map + Sidebar */}
-        <div
-          className="flex-1 flex overflow-hidden"
-          style={{ minHeight: "560px" }}
-        >
-          {/* Map */}
-          <div className="flex-1 min-w-0 relative">
-            <ProjectMap
-              projects={filteredProjects}
-              center={mapCenter}
-              zoom={mapZoom}
-              highlightedId={highlightedProject}
-              onProjectHover={setHighlightedProject}
-              onProjectSelect={handleProjectSelect}
-              className="absolute inset-0"
-            />
-          </div>
-
-          {/* Sidebar: project list + recent updates */}
-          <div className="w-[400px] shrink-0 border-l border-border bg-card flex-col hidden md:flex">
-            <div className="px-4 py-3.5 border-b border-border flex items-center justify-between shrink-0">
-              <h2 className="text-sm font-bold text-foreground">
-                Lista de obras
-              </h2>
-              {statusFilter !== "all" && (
-                <StatusBadge status={statusFilter as ProjectStatus} />
-              )}
+        {/* Main content: split Airbnb-like (map left, list right) + updates below */}
+        <div className="px-4 md:px-6 py-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Map column (left, sticky on desktop) */}
+            <div className="w-full md:w-[55%] md:sticky md:top-16 md:self-start">
+              <div className="relative rounded-xl overflow-hidden border border-border bg-muted h-[280px] md:h-[calc(100vh-5rem)]">
+                <ProjectMap
+                  projects={filteredProjects}
+                  center={mapCenter}
+                  zoom={mapZoom}
+                  highlightedId={highlightedProject}
+                  onProjectHover={setHighlightedProject}
+                  onProjectSelect={handleProjectSelect}
+                  className="absolute inset-0"
+                />
+              </div>
             </div>
 
-            {filteredProjects.length === 0 ? (
-              <EmptyState
-                title="Nenhuma obra encontrada"
-                description="Nao ha obras que correspondam aos filtros selecionados. Tente ajustar a localizacao, o status ou o termo de busca."
-              />
-            ) : (
-              <ScrollArea className="flex-1">
-                <div className="p-3 flex flex-col gap-2.5">
+            {/* List column (right, independently scrollable on desktop) */}
+            <div className="w-full md:w-[45%] md:h-[calc(100vh-5rem)] md:overflow-y-auto pl-1 pr-2">
+              <div className="flex items-center justify-between py-3 sticky top-0 bg-background z-10">
+                <h2 className="text-sm font-bold text-foreground">
+                  Lista de obras
+                </h2>
+                {statusFilter !== "all" && (
+                  <StatusBadge status={statusFilter as ProjectStatus} />
+                )}
+              </div>
+
+              {filteredProjects.length === 0 ? (
+                <EmptyState
+                  title="Nenhuma obra encontrada"
+                  description="Nao ha obras que correspondam aos filtros selecionados. Tente ajustar a localizacao, o status ou o termo de busca."
+                />
+              ) : (
+                <div className="flex flex-col gap-2.5 pb-2">
                   {filteredProjects.map((project) => (
                     <ProjectCard
                       key={project.id}
@@ -310,16 +304,16 @@ export default function ExplorePage() {
                     />
                   ))}
                 </div>
-              </ScrollArea>
-            )}
-
-            {/* Recent updates at bottom */}
-            {filteredProjects.length > 0 && (
-              <div className="border-t border-border shrink-0">
-                <RecentUpdates updates={recentUpdates} />
-              </div>
-            )}
+              )}
+            </div>
           </div>
+
+          {/* Recent Updates - below the split, full width */}
+          {filteredProjects.length > 0 && (
+            <section className="w-full mt-8">
+              <RecentUpdates updates={recentUpdates} />
+            </section>
+          )}
         </div>
       </main>
 

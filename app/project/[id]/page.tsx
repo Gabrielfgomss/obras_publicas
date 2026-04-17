@@ -30,6 +30,7 @@ import {
   Wallet,
   Banknote,
 } from "lucide-react";
+import { isNumberObject } from "util/types";
 
 function formatDateBR(iso: string) {
   const [y, m, d] = iso.split("-");
@@ -46,12 +47,15 @@ function getMockFinancials(project: Project) {
   return { totalValue, executedValue };
 }
 
-const brl = (n: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  }).format(n);
+const brl = (n: number | string) => {
+  const num = typeof n === "string" ? Number(n.replace(/\D/g, "")) : n;
+  return (
+    "R$ " +
+    Math.round(num || 0)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+  );
+};
 
 export default function ProjectDetailPage({
   params,
@@ -194,7 +198,7 @@ export default function ProjectDetailPage({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-1.5">
                               <time className="text-xs text-muted-foreground tabular-nums font-semibold">
-                                {update.date}
+                                {formatDateBR(update.date)}
                               </time>
                               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <User className="h-3 w-3 text-accent/50" />
@@ -257,12 +261,12 @@ export default function ProjectDetailPage({
                   <InfoRow
                     icon={Calendar}
                     label="Data de inicio"
-                    value={project.startDate}
+                    value={formatDateBR(project.startDate)}
                   />
                   <InfoRow
                     icon={Clock}
                     label="Previsao de termino"
-                    value={project.expectedEndDate}
+                    value={formatDateBR(project.expectedEndDate)}
                   />
                   <InfoRow
                     icon={FileText}
@@ -272,7 +276,7 @@ export default function ProjectDetailPage({
                   <InfoRow
                     icon={DollarSign}
                     label="Orcamento aprovado"
-                    value={project.budget}
+                    value={brl(project.budget)}
                   />
                   <InfoRow
                     icon={Tag}
@@ -282,7 +286,7 @@ export default function ProjectDetailPage({
                   <InfoRow
                     icon={Calendar}
                     label="Ultima atualizacao"
-                    value={project.lastUpdate}
+                    value={formatDateBR(project.lastUpdate)}
                   />
                 </div>
                 <div className="px-4 py-3 border-t border-border">
@@ -755,134 +759,138 @@ function MilestoneCalendar({ project }: { project: Project }) {
 
       <div className="flex flex-col lg:flex-row">
         {/* Left: Calendar - institutional dark theme */}
-        <div className="bg-primary text-primary-foreground lg:w-96 shrink-0">
-          {/* Month navigation */}
-          <div className="flex items-center justify-between px-4 py-3">
-            <button
-              type="button"
-              onClick={prevMonth}
-              className="p-1.5 rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-              aria-label="Mes anterior"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="text-sm font-semibold">
-              {MONTH_NAMES[currentMonth]} {currentYear}
-            </span>
-            <button
-              type="button"
-              onClick={nextMonth}
-              className="p-1.5 rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-              aria-label="Proximo mes"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Day headers */}
-          <div className="grid grid-cols-7 gap-0 px-2">
-            {DAY_HEADERS.map((d) => (
-              <div
-                key={d}
-                className="text-center text-[10px] text-white/40 font-semibold pb-2"
+        <div className="w-96">
+          <div className="bg-primary text-primary-foreground lg:w-90 shrink-0">
+            {/* Month navigation */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <button
+                type="button"
+                onClick={prevMonth}
+                className="p-1.5 rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                aria-label="Mes anterior"
               >
-                {d}
-              </div>
-            ))}
-          </div>
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-sm font-semibold">
+                {MONTH_NAMES[currentMonth]} {currentYear}
+              </span>
+              <button
+                type="button"
+                onClick={nextMonth}
+                className="p-1.5 rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                aria-label="Proximo mes"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
 
-          {/* Day cells */}
-          <div className="grid grid-cols-7 gap-0 px-2 pb-3">
-            {calendarDays.map((day, i) => {
-              if (day === null) {
-                return <div key={`empty-${i}`} className="aspect-square" />;
-              }
-              const dateKey = formatDateKey(day);
-              const entries = notableDates.get(dateKey);
-              const hasEvents = !!entries;
-              const isSelected = selectedDate === dateKey;
-              const today = new Date();
-              const isToday =
-                day === today.getDate() &&
-                currentMonth === today.getMonth() &&
-                currentYear === today.getFullYear();
-
-              return (
-                <button
-                  key={dateKey}
-                  type="button"
-                  onClick={() =>
-                    hasEvents
-                      ? setSelectedDate(isSelected ? null : dateKey)
-                      : undefined
-                  }
-                  className={cn(
-                    "aspect-square flex flex-col items-center justify-center rounded-md text-xs relative transition-colors",
-                    hasEvents
-                      ? "cursor-pointer hover:bg-white/10"
-                      : "cursor-default",
-                    isSelected && "bg-white/15 ring-1 ring-white/30",
-                    isToday && !isSelected && "ring-1 ring-white/20",
-                  )}
-                  aria-label={
-                    hasEvents
-                      ? `${day} de ${MONTH_NAMES[currentMonth]} - ${entries.length} evento(s)`
-                      : `${day} de ${MONTH_NAMES[currentMonth]}`
-                  }
+            {/* Day headers */}
+            <div className="grid grid-cols-7 gap-0 px-2">
+              {DAY_HEADERS.map((d) => (
+                <div
+                  key={d}
+                  className="text-center text-[10px] text-white/40 font-semibold pb-2"
                 >
-                  {hasEvents ? (
-                    <div className="relative">
-                      <div
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* Day cells */}
+            <div className="grid grid-cols-7 gap-0 px-2 pb-3">
+              {calendarDays.map((day, i) => {
+                if (day === null) {
+                  return <div key={`empty-${i}`} className="aspect-square" />;
+                }
+                const dateKey = formatDateKey(day);
+                const entries = notableDates.get(dateKey);
+                const hasEvents = !!entries;
+                const isSelected = selectedDate === dateKey;
+                const today = new Date();
+                const isToday =
+                  day === today.getDate() &&
+                  currentMonth === today.getMonth() &&
+                  currentYear === today.getFullYear();
+
+                return (
+                  <button
+                    key={dateKey}
+                    type="button"
+                    onClick={() =>
+                      hasEvents
+                        ? setSelectedDate(isSelected ? null : dateKey)
+                        : undefined
+                    }
+                    className={cn(
+                      "aspect-square flex flex-col items-center justify-center rounded-md text-xs relative transition-colors",
+                      hasEvents
+                        ? "cursor-pointer hover:bg-white/10"
+                        : "cursor-default",
+                      isSelected && "bg-white/15 ring-1 ring-white/30",
+                      isToday && !isSelected && "ring-1 ring-white/20",
+                    )}
+                    aria-label={
+                      hasEvents
+                        ? `${day} de ${MONTH_NAMES[currentMonth]} - ${entries.length} evento(s)`
+                        : `${day} de ${MONTH_NAMES[currentMonth]}`
+                    }
+                  >
+                    {hasEvents ? (
+                      <div className="relative">
+                        <div
+                          className={cn(
+                            "h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-semibold border-2",
+                            entries.some(
+                              (e) => e.type === "milestone" && e.completed,
+                            )
+                              ? "border-status-completed bg-status-completed/20 text-white"
+                              : entries.some((e) => e.type === "milestone")
+                                ? "border-accent bg-accent/20 text-white"
+                                : "border-status-planned bg-status-planned/20 text-white",
+                          )}
+                        >
+                          {day}
+                        </div>
+                        <div
+                          className={cn(
+                            "absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-primary",
+                            getDotColor(entries),
+                          )}
+                        />
+                      </div>
+                    ) : (
+                      <span
                         className={cn(
-                          "h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-semibold border-2",
-                          entries.some(
-                            (e) => e.type === "milestone" && e.completed,
-                          )
-                            ? "border-status-completed bg-status-completed/20 text-white"
-                            : entries.some((e) => e.type === "milestone")
-                              ? "border-accent bg-accent/20 text-white"
-                              : "border-status-planned bg-status-planned/20 text-white",
+                          "tabular-nums",
+                          isToday
+                            ? "text-white font-semibold"
+                            : "text-white/40",
                         )}
                       >
                         {day}
-                      </div>
-                      <div
-                        className={cn(
-                          "absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-primary",
-                          getDotColor(entries),
-                        )}
-                      />
-                    </div>
-                  ) : (
-                    <span
-                      className={cn(
-                        "tabular-nums",
-                        isToday ? "text-white font-semibold" : "text-white/40",
-                      )}
-                    >
-                      {day}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Legend */}
-          <div className="px-4 py-2.5 border-t border-white/10">
-            <div className="flex flex-wrap items-center gap-3 text-[10px] text-white/50 font-medium">
-              <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-status-completed" />
-                Concluido
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-accent" />
-                Previsto
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-status-planned" />
-                Atualizacao
-              </span>
+            {/* Legend */}
+            <div className="px-4 py-2.5 border-t border-white/10">
+              <div className="flex flex-wrap items-center gap-3 text-[10px] text-white/50 font-medium">
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-status-completed" />
+                  Concluido
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-accent" />
+                  Previsto
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-status-planned" />
+                  Atualizacao
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -976,7 +984,7 @@ function MilestoneCalendar({ project }: { project: Project }) {
                           {ms.label}
                         </div>
                         <div className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
-                          {ms.date}
+                          {formatDateBR(ms.date)}
                         </div>
                         <div className="text-[10px] text-muted-foreground">
                           {ms.completed ? "Concluido" : "Previsto"}

@@ -17,12 +17,20 @@ function getMockFinancials(project: Project) {
   return { totalValue, executedValue };
 }
 
-const brl = (n: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  }).format(n);
+function formatDateBR(iso: string) {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+const brl = (n: number | string) => {
+  const num = typeof n === "string" ? Number(n.replace(/\D/g, "")) : n;
+  return (
+    "R$ " +
+    Math.round(num || 0)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+  );
+};
 
 const statusAccentMap: Record<string, string> = {
   "in-progress": "card-accent-in-progress",
@@ -111,7 +119,7 @@ export function ProjectCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Calendar className="h-3 w-3 shrink-0" />
-          <span>Atualizado em {project.lastUpdate}</span>
+          <span>Atualizado em {formatDateBR(project.lastUpdate)}</span>
         </div>
         <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors" />
       </div>

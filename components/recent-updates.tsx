@@ -19,6 +19,11 @@ interface RecentUpdatesProps {
   isLoading?: boolean;
 }
 
+function formatDateBR(iso: string) {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
 export function RecentUpdates({ updates, isLoading }: RecentUpdatesProps) {
   if (isLoading) {
     return (
@@ -72,7 +77,7 @@ export function RecentUpdates({ updates, isLoading }: RecentUpdatesProps) {
           >
             <div className="flex items-center justify-between mb-1">
               <time className="text-[11px] text-muted-foreground tabular-nums font-medium">
-                {update.date}
+                {formatDateBR(update.date)}
               </time>
               <ArrowUpRight className="h-3 w-3 text-muted-foreground/30 group-hover:text-accent transition-colors" />
             </div>

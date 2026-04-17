@@ -755,7 +755,7 @@ function MilestoneCalendar({ project }: { project: Project }) {
 
       <div className="flex flex-col lg:flex-row">
         {/* Left: Calendar - institutional dark theme */}
-        <div className="bg-primary text-primary-foreground lg:w-80 shrink-0">
+        <div className="bg-primary text-primary-foreground lg:w-96 shrink-0">
           {/* Month navigation */}
           <div className="flex items-center justify-between px-4 py-3">
             <button

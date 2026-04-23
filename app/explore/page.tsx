@@ -263,7 +263,7 @@ export default function ExplorePage() {
           <div className="flex flex-col md:flex-row gap-4">
             {/* Map column (left, sticky on desktop) */}
             <div className="w-full md:w-[55%] md:sticky md:top-16 md:self-start">
-              <div className="relative rounded-xl overflow-hidden border border-border bg-muted h-[280px] md:h-[calc(100vh-5rem)]">
+              <div className="relative rounded-xl overflow-hidden border border-border bg-muted h-[280px] md:h-[calc(85vh-5rem)]">
                 <ProjectMap
                   projects={filteredProjects}
                   center={mapCenter}
@@ -277,7 +277,7 @@ export default function ExplorePage() {
             </div>
 
             {/* List column (right, independently scrollable on desktop) */}
-            <div className="w-full md:w-[45%] md:h-[calc(100vh-5rem)] md:overflow-y-auto pl-1 pr-2">
+            <div className="w-full md:w-[45%] md:h-[calc(85vh-5rem)] md:overflow-y-auto pl-1 pr-2">
               <div className="flex items-center justify-between py-3 sticky top-0 bg-background z-10">
                 <h2 className="text-sm font-bold text-foreground">
                   Lista de obras
